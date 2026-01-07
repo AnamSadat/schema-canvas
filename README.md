@@ -1,36 +1,175 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SchemaCanvas
+
+Generate ERD dari MySQL/PostgreSQL secara cepat dan rapi dengan UI modern.
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: TailwindCSS v4
+- **UI Components**: shadcn/ui (New York style)
+- **Diagram**: React Flow (@xyflow/react)
+- **State Management**: Zustand
+- **Toast**: Sonner
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Install dependencies
+pnpm install
+
+# Run development server
 pnpm dev
-# or
-bun dev
+
+# Build for production
+pnpm build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+├── app/                          # Next.js App Router
+│   ├── page.tsx                  # Landing page (/)
+│   ├── connect/page.tsx          # Database connection form (/connect)
+│   ├── erd/page.tsx              # ERD Viewer (/erd)
+│   ├── privacy/page.tsx          # Privacy Policy (/privacy)
+│   ├── terms/page.tsx            # Terms of Service (/terms)
+│   ├── layout.tsx                # Root layout
+│   └── globals.css               # Global styles
+│
+├── components/
+│   ├── erd/                      # ERD-specific components
+│   │   ├── table-node.tsx        # React Flow node untuk tabel
+│   │   ├── sidebar-navigator.tsx # Sidebar dengan search & tree view
+│   │   ├── viewer-toolbar.tsx    # Toolbar zoom/fit/reset
+│   │   ├── erd-canvas.tsx        # Main React Flow canvas
+│   │   ├── empty-state.tsx       # Empty state component
+│   │   ├── loading-state.tsx     # Loading skeleton
+│   │   └── index.ts              # Barrel export
+│   │
+│   ├── layout/                   # Layout components
+│   │   ├── header.tsx            # Site header/navbar
+│   │   ├── footer.tsx            # Site footer
+│   │   └── index.ts              # Barrel export
+│   │
+│   └── ui/                       # shadcn/ui components
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── input.tsx
+│       ├── tabs.tsx
+│       └── ...
+│
+├── lib/
+│   ├── schema/                   # Schema processing
+│   │   ├── mock-data.ts          # Mock schema untuk demo
+│   │   ├── parser.ts             # Schema parser & node/edge builder
+│   │   └── index.ts              # Barrel export
+│   │
+│   ├── store/                    # State management
+│   │   └── erd-store.ts          # Zustand store untuk ERD state
+│   │
+│   └── utils.ts                  # Utility functions (cn, etc)
+│
+├── types/
+│   └── schema.ts                 # TypeScript types untuk schema, ERD, dll
+│
+├── constants/
+│   └── index.ts                  # App constants (dialects, ports, etc)
+│
+└── public/                       # Static assets
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features
 
-## Learn More
+### Landing Page (/)
 
-To learn more about Next.js, take a look at the following resources:
+- Hero section dengan value proposition
+- Feature highlights
+- CTA ke /connect
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Connect Page (/connect)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Form input: host, port, username, password, database, SSL
+- Tab untuk connection URL
+- Test connection (mock)
+- Generate ERD button
+- Security notice
 
-## Deploy on Vercel
+### ERD Viewer (/erd)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Interactive diagram dengan React Flow
+- Draggable table nodes
+- Sidebar navigator dengan search
+- Click to focus/highlight
+- Zoom controls & minimap
+- Reset layout
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Legal Pages
+
+- Privacy Policy (/privacy)
+- Terms of Service (/terms)
+
+## Security Checklist
+
+✅ **DO:**
+
+- Process credentials in-memory only
+- Use SSL connections
+- Clear credentials after use
+- Show security notices to users
+
+❌ **DON'T:**
+
+- Store passwords in localStorage
+- Log credentials to console
+- Send credentials to analytics
+- Persist credentials to disk
+
+## Hook Points untuk Backend
+
+File `lib/schema/parser.ts` berisi hook points untuk integrasi backend:
+
+```typescript
+// Fetch schema dari API
+export async function fetchSchemaFromAPI(
+  connectionId: string
+): Promise<DatabaseSchema>;
+
+// Test koneksi database
+export async function testConnection(
+  config: ConnectionConfig
+): Promise<TestResult>;
+```
+
+## Mock Schema Format
+
+```json
+{
+  "tables": [
+    {
+      "name": "users",
+      "columns": [
+        { "name": "id", "type": "uuid", "pk": true },
+        { "name": "email", "type": "varchar", "unique": true }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "fromTable": "orders",
+      "fromColumn": "user_id",
+      "toTable": "users",
+      "toColumn": "id",
+      "type": "many-to-one"
+    }
+  ]
+}
+```
+
+## Demo Mode
+
+Akses `/erd?demo=true` untuk melihat ERD dengan mock schema.
+
+## License
+
+MIT
