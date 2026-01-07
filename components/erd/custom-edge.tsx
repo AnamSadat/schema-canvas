@@ -15,6 +15,69 @@ interface CustomEdgeData {
   toColumn?: string;
 }
 
+interface MarkerProps {
+  x: number;
+  y: number;
+  rotation: number;
+  strokeColor: string;
+  strokeWidth: number;
+}
+
+// Crow's foot marker (many) - looks like < or >
+const CrowsFoot = memo(function CrowsFoot({
+  x,
+  y,
+  rotation,
+  strokeColor,
+  strokeWidth,
+}: MarkerProps) {
+  return (
+    <g transform={`translate(${x}, ${y}) rotate(${rotation})`}>
+      <line
+        x1="0"
+        y1="0"
+        x2="-14"
+        y2="-8"
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+      <line
+        x1="0"
+        y1="0"
+        x2="-14"
+        y2="8"
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </g>
+  );
+});
+
+// One marker - vertical line |
+const OneLine = memo(function OneLine({
+  x,
+  y,
+  rotation,
+  strokeColor,
+  strokeWidth,
+}: MarkerProps) {
+  return (
+    <g transform={`translate(${x}, ${y}) rotate(${rotation})`}>
+      <line
+        x1="-6"
+        y1="-8"
+        x2="-6"
+        y2="8"
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </g>
+  );
+});
+
 function CustomEdgeComponent({
   id,
   sourceX,
@@ -42,8 +105,7 @@ function CustomEdgeComponent({
     borderRadius: 8,
   });
 
-  // Determine cardinality based on relation type
-  // Source = FK side (from), Target = PK side (to)
+  // Source = FK side (many), Target = PK side (one) for many-to-one
   const sourceIsMany =
     relationType === "many-to-one" || relationType === "many-to-many";
   const targetIsMany =
@@ -52,7 +114,6 @@ function CustomEdgeComponent({
   const strokeColor = selected ? "oklch(0.75 0.15 190)" : "oklch(0.5 0.1 190)";
   const strokeWidth = selected ? 2.5 : 2;
 
-  // Get label text
   const getLabelText = () => {
     switch (relationType) {
       case "one-to-one":
@@ -68,49 +129,26 @@ function CustomEdgeComponent({
     }
   };
 
-  // Calculate marker positions and angles
-  const getMarkerTransform = (
-    x: number,
-    y: number,
-    position: Position,
-    isSource: boolean
-  ) => {
-    let angle = 0;
-    let offsetX = 0;
-    let offsetY = 0;
-    const markerOffset = 2;
-
-    if (position === Position.Right) {
-      angle = 0;
-      offsetX = isSource ? markerOffset : -markerOffset;
-    } else if (position === Position.Left) {
-      angle = 180;
-      offsetX = isSource ? -markerOffset : markerOffset;
-    } else if (position === Position.Top) {
-      angle = -90;
-      offsetY = isSource ? -markerOffset : markerOffset;
-    } else if (position === Position.Bottom) {
-      angle = 90;
-      offsetY = isSource ? markerOffset : -markerOffset;
+  // Calculate direction for markers
+  const getMarkerRotation = (position: Position) => {
+    switch (position) {
+      case Position.Right:
+        return 0;
+      case Position.Left:
+        return 180;
+      case Position.Top:
+        return -90;
+      case Position.Bottom:
+        return 90;
+      default:
+        return 0;
     }
-
-    return { x: x + offsetX, y: y + offsetY, angle };
   };
 
-  const sourceMarker = getMarkerTransform(
-    sourceX,
-    sourceY,
-    sourcePosition,
-    true
-  );
-  const targetMarker = getMarkerTransform(
-    targetX,
-    targetY,
-    targetPosition,
-    false
-  );
+  const sourceRotation = getMarkerRotation(sourcePosition);
+  const targetRotation = getMarkerRotation(targetPosition);
 
-  // Handle drag
+  // Handle drag for label
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsDragging(true);
@@ -151,98 +189,42 @@ function CustomEdgeComponent({
       />
 
       {/* Source marker (FK side) */}
-      <g
-        transform={`translate(${sourceMarker.x}, ${sourceMarker.y}) rotate(${sourceMarker.angle})`}
-      >
-        {sourceIsMany ? (
-          // Crow's foot (many)
-          <>
-            <line
-              x1="0"
-              y1="0"
-              x2="12"
-              y2="-8"
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-            />
-            <line
-              x1="0"
-              y1="0"
-              x2="12"
-              y2="0"
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-            />
-            <line
-              x1="0"
-              y1="0"
-              x2="12"
-              y2="8"
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-            />
-          </>
-        ) : (
-          // Single line (one)
-          <>
-            <line
-              x1="8"
-              y1="-8"
-              x2="8"
-              y2="8"
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-            />
-          </>
-        )}
-      </g>
+      {sourceIsMany ? (
+        <CrowsFoot
+          x={sourceX}
+          y={sourceY}
+          rotation={sourceRotation}
+          strokeColor={strokeColor}
+          strokeWidth={strokeWidth}
+        />
+      ) : (
+        <OneLine
+          x={sourceX}
+          y={sourceY}
+          rotation={sourceRotation}
+          strokeColor={strokeColor}
+          strokeWidth={strokeWidth}
+        />
+      )}
 
       {/* Target marker (PK side) */}
-      <g
-        transform={`translate(${targetMarker.x}, ${targetMarker.y}) rotate(${targetMarker.angle})`}
-      >
-        {targetIsMany ? (
-          // Crow's foot (many)
-          <>
-            <line
-              x1="0"
-              y1="0"
-              x2="-12"
-              y2="-8"
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-            />
-            <line
-              x1="0"
-              y1="0"
-              x2="-12"
-              y2="0"
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-            />
-            <line
-              x1="0"
-              y1="0"
-              x2="-12"
-              y2="8"
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-            />
-          </>
-        ) : (
-          // Single line (one)
-          <>
-            <line
-              x1="-8"
-              y1="-8"
-              x2="-8"
-              y2="8"
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-            />
-          </>
-        )}
-      </g>
+      {targetIsMany ? (
+        <CrowsFoot
+          x={targetX}
+          y={targetY}
+          rotation={targetRotation + 180}
+          strokeColor={strokeColor}
+          strokeWidth={strokeWidth}
+        />
+      ) : (
+        <OneLine
+          x={targetX}
+          y={targetY}
+          rotation={targetRotation + 180}
+          strokeColor={strokeColor}
+          strokeWidth={strokeWidth}
+        />
+      )}
 
       {/* Draggable Label */}
       <EdgeLabelRenderer>
