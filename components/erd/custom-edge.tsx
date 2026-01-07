@@ -114,7 +114,8 @@ function CustomEdgeComponent({
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 8,
+    borderRadius: 12,
+    offset: 40,
   });
 
   // Source = FK side (many), Target = PK side (one) for many-to-one
