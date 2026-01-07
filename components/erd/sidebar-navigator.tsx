@@ -13,7 +13,6 @@ import { useReactFlow } from "@xyflow/react";
 import { cn } from "@/lib/utils";
 import { useERDStore } from "@/lib/store/erd-store";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function SidebarNavigator() {
@@ -68,7 +67,6 @@ export function SidebarNavigator() {
     }
 
     selectTable(tableName);
-    toggleExpand(tableName);
 
     const node = nodes.find((n) => n.id === tableName);
     if (node) {
@@ -77,6 +75,11 @@ export function SidebarNavigator() {
         duration: 500,
       });
     }
+  };
+
+  const handleExpandClick = (e: React.MouseEvent, tableName: string) => {
+    e.stopPropagation();
+    toggleExpand(tableName);
   };
 
   const handleColumnClick = (tableName: string, columnName: string) => {
@@ -113,7 +116,7 @@ export function SidebarNavigator() {
   }
 
   return (
-    <div className="w-72 border-r border-border/50 bg-card/30 flex flex-col">
+    <div className="w-72 border-r border-border/50 bg-card/30 flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-border/50">
         <h2 className="font-semibold mb-3">Tables</h2>
@@ -129,7 +132,7 @@ export function SidebarNavigator() {
       </div>
 
       {/* Table List */}
-      <ScrollArea className="flex-1">
+      <div className="flex-1 min-h-0 overflow-y-auto sidebar-scroll">
         <div className="p-2">
           {filteredTables.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
@@ -142,8 +145,7 @@ export function SidebarNavigator() {
 
               return (
                 <div key={table.name} className="mb-1">
-                  <button
-                    onClick={() => handleTableClick(table.name)}
+                  <div
                     className={cn(
                       "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
                       "hover:bg-accent",
@@ -152,27 +154,37 @@ export function SidebarNavigator() {
                         "bg-primary/10 text-primary"
                     )}
                   >
-                    <ChevronRight
-                      className={cn(
-                        "h-4 w-4 text-muted-foreground transition-transform shrink-0",
-                        isExpanded && "rotate-90"
-                      )}
-                    />
-                    <Table2
-                      className={cn(
-                        "h-4 w-4 shrink-0",
-                        isSelected && !selectedColumn
-                          ? "text-primary"
-                          : "text-muted-foreground"
-                      )}
-                    />
-                    <span className="flex-1 text-left truncate font-medium">
-                      {table.name}
-                    </span>
+                    <button
+                      onClick={(e) => handleExpandClick(e, table.name)}
+                      className="p-0.5 -ml-1 hover:bg-accent rounded shrink-0"
+                    >
+                      <ChevronRight
+                        className={cn(
+                          "h-4 w-4 text-muted-foreground transition-transform",
+                          isExpanded && "rotate-90"
+                        )}
+                      />
+                    </button>
+                    <button
+                      onClick={() => handleTableClick(table.name)}
+                      className="flex-1 flex items-center gap-2 text-left"
+                    >
+                      <Table2
+                        className={cn(
+                          "h-4 w-4 shrink-0",
+                          isSelected && !selectedColumn
+                            ? "text-primary"
+                            : "text-muted-foreground"
+                        )}
+                      />
+                      <span className="flex-1 truncate font-medium">
+                        {table.name}
+                      </span>
+                    </button>
                     <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                       {table.columns.length}
                     </span>
-                  </button>
+                  </div>
 
                   {isExpanded && (
                     <div className="ml-5 mt-1 space-y-0.5 border-l border-border/50 pl-3">
@@ -220,7 +232,7 @@ export function SidebarNavigator() {
             })
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Stats */}
       {schema && (
