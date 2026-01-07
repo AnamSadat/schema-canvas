@@ -23,7 +23,7 @@ interface MarkerProps {
   strokeWidth: number;
 }
 
-// Crow's foot marker (many) - looks like < or >
+// Crow's foot marker (many) - two lines pointing toward table like >
 const CrowsFoot = memo(function CrowsFoot({
   x,
   y,
@@ -33,20 +33,32 @@ const CrowsFoot = memo(function CrowsFoot({
 }: MarkerProps) {
   return (
     <g transform={`translate(${x}, ${y}) rotate(${rotation})`}>
+      {/* Connection line to table */}
       <line
-        x1="0"
+        x1="15"
         y1="0"
-        x2="-14"
-        y2="-8"
+        x2="-6"
+        y2="0"
         stroke={strokeColor}
         strokeWidth={strokeWidth}
         strokeLinecap="round"
       />
+      {/* Top line */}
       <line
-        x1="0"
+        x1="15"
         y1="0"
-        x2="-14"
-        y2="8"
+        x2="-6"
+        y2="-10"
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+      {/* Bottom line */}
+      <line
+        x1="15"
+        y1="0"
+        x2="-6"
+        y2="10"
         stroke={strokeColor}
         strokeWidth={strokeWidth}
         strokeLinecap="round"
@@ -55,7 +67,7 @@ const CrowsFoot = memo(function CrowsFoot({
   );
 });
 
-// One marker - vertical line |
+// One marker - vertical line crossing the edge
 const OneLine = memo(function OneLine({
   x,
   y,
@@ -66,9 +78,9 @@ const OneLine = memo(function OneLine({
   return (
     <g transform={`translate(${x}, ${y}) rotate(${rotation})`}>
       <line
-        x1="-6"
+        x1="-10"
         y1="-8"
-        x2="-6"
+        x2="-10"
         y2="8"
         stroke={strokeColor}
         strokeWidth={strokeWidth}
@@ -242,11 +254,12 @@ function CustomEdgeComponent({
         >
           <div
             className={`
-              px-2 py-1 rounded text-[10px] font-mono 
-              bg-card border border-border/50 text-muted-foreground 
-              hover:text-foreground hover:border-primary/50 
-              transition-colors select-none
-              ${selected ? "border-primary text-foreground" : ""}
+              px-2.5 py-1 rounded-md text-[11px] font-semibold font-mono 
+              bg-slate-800 border-2 border-cyan-600/70 text-cyan-300
+              shadow-lg shadow-cyan-900/30
+              hover:bg-slate-700 hover:border-cyan-500 hover:text-cyan-200
+              transition-all select-none
+              ${selected ? "border-cyan-400 text-cyan-200 bg-slate-700" : ""}
             `}
           >
             {getLabelText()}

@@ -28,23 +28,23 @@ function ColumnRow({
         isHighlighted && "bg-primary/20"
       )}
     >
-      {/* Left Handle - for PK being referenced */}
+      {/* Left Handle - for PK being referenced (invisible) */}
       {isTarget && (
         <Handle
           type="target"
           position={Position.Left}
           id={handleId}
-          className="w-2.5! h-2.5! bg-amber-500! border-2! border-card! left-[-5px]! rounded-full!"
+          className="w-1! h-1! opacity-0! left-0!"
         />
       )}
 
-      {/* Right Handle - for FK pointing out */}
+      {/* Right Handle - for FK pointing out (invisible) */}
       {isSource && (
         <Handle
           type="source"
           position={Position.Right}
           id={handleId}
-          className="w-2.5! h-2.5! bg-blue-500! border-2! border-card! right-[-5px]! rounded-full!"
+          className="w-1! h-1! opacity-0! right-0!"
         />
       )}
 
