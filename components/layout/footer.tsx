@@ -13,7 +13,9 @@ export function Footer() {
             </div>
             <span>{APP_NAME}</span>
             <span className="text-border">·</span>
-            <span>© {new Date().getFullYear()}</span>
+            <span>
+              © {new Date().getFullYear()} Anam Sadat. All rights reserved.
+            </span>
           </div>
 
           <nav className="flex items-center gap-6 text-sm">
