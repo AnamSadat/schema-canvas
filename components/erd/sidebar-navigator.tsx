@@ -139,12 +139,12 @@ export function SidebarNavigator() {
               No tables found
             </p>
           ) : (
-            filteredTables.map((table) => {
+            filteredTables.map((table, tableIndex) => {
               const isExpanded = expandedTables.has(table.name);
               const isSelected = selectedTable === table.name;
 
               return (
-                <div key={table.name} className="mb-1">
+                <div key={`${table.name}-${tableIndex}`} className="mb-1">
                   <div
                     className={cn(
                       "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",

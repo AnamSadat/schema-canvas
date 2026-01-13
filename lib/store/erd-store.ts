@@ -26,6 +26,7 @@ interface ERDStore {
   toggleShowColumns: () => void;
   setLoading: (loading: boolean) => void;
   resetLayout: () => void;
+  resetStore: () => void;
 }
 
 export const useERDStore = create<ERDStore>((set, get) => ({
@@ -41,8 +42,14 @@ export const useERDStore = create<ERDStore>((set, get) => ({
 
   // Actions
   setSchema: (schema) => {
-    const { nodes, edges } = parseSchema(schema);
-    set({ schema, nodes, edges });
+    // Deduplicate tables by name
+    const uniqueTables = schema.tables.filter(
+      (table, index, self) =>
+        index === self.findIndex((t) => t.name === table.name)
+    );
+    const deduplicatedSchema = { ...schema, tables: uniqueTables };
+    const { nodes, edges } = parseSchema(deduplicatedSchema);
+    set({ schema: deduplicatedSchema, nodes, edges });
   },
 
   setNodes: (nodes) => set({ nodes }),
@@ -110,5 +117,18 @@ export const useERDStore = create<ERDStore>((set, get) => ({
       const { nodes, edges } = parseSchema(schema);
       set({ nodes, edges, selectedTable: null, selectedColumn: null });
     }
+  },
+
+  resetStore: () => {
+    set({
+      schema: null,
+      nodes: [],
+      edges: [],
+      selectedTable: null,
+      selectedColumn: null,
+      searchQuery: "",
+      showColumns: true,
+      isLoading: false,
+    });
   },
 }));

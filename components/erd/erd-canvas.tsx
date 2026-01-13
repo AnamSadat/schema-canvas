@@ -22,6 +22,7 @@ import { TableNode } from "./table-node";
 import { CustomEdge } from "./custom-edge";
 import { ViewerToolbar } from "./viewer-toolbar";
 import { TableNodeData } from "@/types/schema";
+import { ViewerInformation } from "@/components/erd";
 
 type TableNodeType = Node<TableNodeData, "tableNode">;
 
@@ -105,12 +106,16 @@ export function ERDCanvas() {
           className="bottom-4! right-4!"
           nodeColor="oklch(0.35 0.05 190)"
           maskColor="rgba(0, 0, 0, 0.7)"
+          nodeStrokeWidth={3}
+          zoomable
+          pannable
           style={{
             backgroundColor: "oklch(0.17 0.02 260)",
           }}
         />
       </ReactFlow>
       <ViewerToolbar />
+      <ViewerInformation />
     </div>
   );
 }
