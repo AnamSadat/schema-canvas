@@ -76,13 +76,23 @@ function getRelationColumns(schema: DatabaseSchema): {
 export function buildNodes(schema: DatabaseSchema): Node<TableNodeData>[] {
   const { sourceMap, targetMap } = getRelationColumns(schema);
 
+  // Track used ids to handle duplicates
+  const usedIds = new Set<string>();
+
   return schema.tables.map((table, index) => {
     const position = calculateNodePosition(index, schema.tables);
     const sourceColumns = sourceMap.get(table.name);
     const targetColumns = targetMap.get(table.name);
 
+    // Ensure unique node id - append index if duplicate
+    let nodeId = table.name;
+    if (usedIds.has(nodeId)) {
+      nodeId = `${table.name}_${index}`;
+    }
+    usedIds.add(nodeId);
+
     return {
-      id: table.name,
+      id: nodeId,
       type: "tableNode",
       position,
       data: {
@@ -124,30 +134,11 @@ export function parseSchema(schema: DatabaseSchema): {
   };
 }
 
-// HOOK POINTS
+// HOOK POINTS - untuk future API integration
 export async function fetchSchemaFromAPI(
   _connectionId: string
 ): Promise<DatabaseSchema> {
   await new Promise((resolve) => setTimeout(resolve, 1500));
   const { mockSchema } = await import("./mock-data");
   return mockSchema;
-}
-
-export async function testConnection(_config: {
-  dialect: string;
-  host: string;
-  port: string;
-  username: string;
-  password: string;
-  database: string;
-  ssl: boolean;
-}): Promise<{ success: boolean; message: string }> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  const success = Math.random() > 0.3;
-  return {
-    success,
-    message: success
-      ? "Connection successful!"
-      : "Connection failed. Please check your credentials.",
-  };
 }

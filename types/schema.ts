@@ -33,6 +33,7 @@ export interface Relation {
 }
 
 export interface DatabaseSchema {
+  name?: string; // nama database (openmusic, book, etc)
   tables: Table[];
   relations: Relation[];
   dialect?: "mysql" | "postgresql";

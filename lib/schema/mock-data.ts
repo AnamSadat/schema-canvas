@@ -1,11 +1,11 @@
 import { DatabaseSchema } from "@/types/schema";
+import { DatabaseDialect } from "@/types/schema";
 
 // ========================
 // Mock Schema untuk Demo
 // ========================
 
-export const mockSchema: DatabaseSchema = {
-  dialect: "postgresql",
+const baseMockSchema = {
   tables: [
     {
       name: "users",
@@ -87,42 +87,57 @@ export const mockSchema: DatabaseSchema = {
       fromColumn: "organization_id",
       toTable: "organizations",
       toColumn: "id",
-      type: "many-to-one",
+      type: "many-to-one" as const,
     },
     {
       fromTable: "organization_members",
       fromColumn: "user_id",
       toTable: "users",
       toColumn: "id",
-      type: "many-to-one",
+      type: "many-to-one" as const,
     },
     {
       fromTable: "projects",
       fromColumn: "organization_id",
       toTable: "organizations",
       toColumn: "id",
-      type: "many-to-one",
+      type: "many-to-one" as const,
     },
     {
       fromTable: "projects",
       fromColumn: "created_by",
       toTable: "users",
       toColumn: "id",
-      type: "many-to-one",
+      type: "many-to-one" as const,
     },
     {
       fromTable: "schemas",
       fromColumn: "project_id",
       toTable: "projects",
       toColumn: "id",
-      type: "many-to-one",
+      type: "many-to-one" as const,
     },
     {
       fromTable: "connections",
       fromColumn: "project_id",
       toTable: "projects",
       toColumn: "id",
-      type: "many-to-one",
+      type: "many-to-one" as const,
     },
   ],
 };
+
+export const getMockSchema = (
+  dialect: DatabaseDialect = "postgresql",
+  dbName: string = "demo_db"
+): DatabaseSchema => ({
+  name: dbName,
+  dialect,
+  ...baseMockSchema,
+});
+
+// Default export untuk backward compatibility
+export const mockSchema: DatabaseSchema = getMockSchema(
+  "postgresql",
+  "demo_db"
+);
