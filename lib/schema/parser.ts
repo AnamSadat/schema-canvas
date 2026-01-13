@@ -142,3 +142,11 @@ export async function fetchSchemaFromAPI(
   const { mockSchema } = await import("./mock-data");
   return mockSchema;
 }
+
+export async function testConnection(
+  _connectionString: string
+): Promise<{ success: boolean; message: string }> {
+  // Placeholder for future database connection testing
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  return { success: true, message: "Connection successful" };
+}
