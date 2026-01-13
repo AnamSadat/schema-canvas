@@ -12,7 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { StoreReset } from "@/components/layout/store-reset";
 import { APP_NAME } from "@/constants";
+import Image from "next/image";
 
 const features = [
   {
@@ -52,15 +54,16 @@ const features = [
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
+      <StoreReset />
       <Header />
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden">
+        <section className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex items-center">
           <div className="absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/10 rounded-full blur-3xl opacity-20" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-primary/10 rounded-full blur-3xl opacity-20" />
 
-          <div className="container relative py-24 md:py-32 lg:py-40">
+          <div className="container relative py-12">
             <div className="mx-auto max-w-4xl text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm text-primary mb-8">
                 <Sparkles className="h-4 w-4" />
@@ -96,18 +99,28 @@ export default function LandingPage() {
                   className="w-full sm:w-auto text-base px-8"
                   asChild
                 >
-                  <Link href="/erd?demo=true">View Demo</Link>
+                  <Link href="/erd?demo=true&dialect=postgresql&db=demo_db">
+                    View Demo
+                  </Link>
                 </Button>
               </div>
 
               <div className="mt-12 flex items-center justify-center gap-8 text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-blue-500" />
-                  <span className="text-sm">PostgreSQL</span>
+                  <Image
+                    src={"/img/postgres-logo.png"}
+                    alt="Logo PostgreSQL"
+                    width={120}
+                    height={0}
+                  />
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-orange-500" />
-                  <span className="text-sm">MySQL</span>
+                  <Image
+                    src={"/img/mysql-logo.png"}
+                    alt="Logo MySQL"
+                    width={120}
+                    height={0}
+                  />
                 </div>
               </div>
             </div>

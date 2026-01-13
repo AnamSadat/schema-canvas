@@ -26,11 +26,17 @@ import {
   DEFAULT_PORTS,
   SECURITY_NOTICE,
 } from "@/constants";
-import { testConnection } from "@/lib/schema/parser";
-import { DatabaseDialect } from "@/types/schema";
+import {
+  testDatabaseConnection,
+  fetchDatabaseSchema,
+} from "@/lib/actions/database";
+import { parseConnectionUrl } from "@/lib/utils/connection";
+import { useERDStore } from "@/lib/store/erd-store";
+import { DatabaseDialect, ConnectionFormData } from "@/types/schema";
 
 export default function ConnectPage() {
   const router = useRouter();
+  const { resetStore, setSchema, setLoading } = useERDStore();
   const [activeTab, setActiveTab] = useState("form");
   const [isLoading, setIsLoading] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
@@ -47,6 +53,28 @@ export default function ConnectPage() {
   });
 
   const [connectionUrl, setConnectionUrl] = useState("");
+
+  // Get connection config based on active tab
+  const getConnectionConfig = (): ConnectionFormData | null => {
+    if (activeTab === "url") {
+      if (!connectionUrl.trim()) {
+        toast.error("Please enter a connection URL");
+        return null;
+      }
+      const parsed = parseConnectionUrl(connectionUrl);
+      if (!parsed) {
+        toast.error("Invalid connection URL format");
+        return null;
+      }
+      return parsed;
+    }
+
+    if (!formData.host || !formData.database) {
+      toast.error("Please fill in host and database name");
+      return null;
+    }
+    return formData;
+  };
 
   const handleDialectChange = (dialect: DatabaseDialect) => {
     setFormData((prev) => ({
@@ -66,9 +94,12 @@ export default function ConnectPage() {
       return;
     }
 
+    const config = getConnectionConfig();
+    if (!config) return;
+
     setIsTesting(true);
     try {
-      const result = await testConnection(formData);
+      const result = await testDatabaseConnection(config);
       if (result.success) {
         toast.success(result.message);
       } else {
@@ -87,9 +118,29 @@ export default function ConnectPage() {
       return;
     }
 
+    const config = getConnectionConfig();
+    if (!config) return;
+
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    router.push("/erd?demo=true");
+    setLoading(true);
+    resetStore();
+
+    try {
+      const result = await fetchDatabaseSchema(config);
+
+      if (result.success && result.schema) {
+        setSchema(result.schema);
+        router.push("/erd");
+      } else {
+        toast.error(result.error || "Failed to fetch schema");
+        setLoading(false);
+      }
+    } catch {
+      toast.error("Failed to generate ERD");
+      setLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -127,29 +178,6 @@ export default function ConnectPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-6">
-                <Label className="mb-3 block">Database Type</Label>
-                <div className="flex gap-2">
-                  {SUPPORTED_DIALECTS.map((dialect) => (
-                    <Button
-                      key={dialect.value}
-                      type="button"
-                      variant={
-                        formData.dialect === dialect.value
-                          ? "default"
-                          : "outline"
-                      }
-                      onClick={() =>
-                        handleDialectChange(dialect.value as DatabaseDialect)
-                      }
-                      className="flex-1"
-                    >
-                      {dialect.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="form">Form</TabsTrigger>
@@ -157,6 +185,31 @@ export default function ConnectPage() {
                 </TabsList>
 
                 <TabsContent value="form" className="space-y-4 mt-4">
+                  <div className="mb-4">
+                    <Label className="mb-3 block">Database Type</Label>
+                    <div className="flex gap-2">
+                      {SUPPORTED_DIALECTS.map((dialect) => (
+                        <Button
+                          key={dialect.value}
+                          type="button"
+                          variant={
+                            formData.dialect === dialect.value
+                              ? "default"
+                              : "outline"
+                          }
+                          onClick={() =>
+                            handleDialectChange(
+                              dialect.value as DatabaseDialect
+                            )
+                          }
+                          className="flex-1"
+                        >
+                          {dialect.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="host">Host</Label>
@@ -187,7 +240,11 @@ export default function ConnectPage() {
                       <Label htmlFor="username">Username</Label>
                       <Input
                         id="username"
-                        placeholder="postgres"
+                        placeholder={
+                          formData.dialect === "postgresql"
+                            ? "postgres"
+                            : "root"
+                        }
                         value={formData.username}
                         onChange={(e) =>
                           handleInputChange("username", e.target.value)
@@ -230,7 +287,7 @@ export default function ConnectPage() {
                       }
                     />
                     <Label htmlFor="ssl" className="text-sm font-normal">
-                      Use SSL connection (recommended)
+                      Use SSL connection (recommended for remote databases)
                     </Label>
                   </div>
                 </TabsContent>
@@ -240,19 +297,18 @@ export default function ConnectPage() {
                     <Label htmlFor="url">Connection String</Label>
                     <Input
                       id="url"
-                      placeholder={
-                        formData.dialect === "postgresql"
-                          ? "postgresql://user:pass@host:5432/dbname"
-                          : "mysql://user:pass@host:3306/dbname"
-                      }
+                      placeholder="postgresql://user:pass@localhost:5432/mydb"
                       value={connectionUrl}
                       onChange={(e) => setConnectionUrl(e.target.value)}
                       autoComplete="off"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Format: {formData.dialect}
-                      ://username:password@host:port/database
+                      Supported formats:
                     </p>
+                    <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1">
+                      <li>postgresql://user:pass@host:5432/database</li>
+                      <li>mysql://user:pass@host:3306/database</li>
+                    </ul>
                   </div>
                 </TabsContent>
               </Tabs>

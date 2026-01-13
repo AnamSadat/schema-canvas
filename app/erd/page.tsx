@@ -5,11 +5,12 @@ import { useSearchParams } from "next/navigation";
 import { ReactFlowProvider } from "@xyflow/react";
 
 import { useERDStore } from "@/lib/store/erd-store";
-import { mockSchema } from "@/lib/schema/mock-data";
+import { getMockSchema } from "@/lib/schema/mock-data";
 import { SidebarNavigator } from "@/components/erd/sidebar-navigator";
 import { ERDCanvas } from "@/components/erd/erd-canvas";
 import { EmptyState } from "@/components/erd/empty-state";
 import { LoadingState } from "@/components/erd/loading-state";
+import { DatabaseDialect } from "@/types/schema";
 
 // ========================
 // ERD Viewer Content
@@ -18,33 +19,30 @@ import { LoadingState } from "@/components/erd/loading-state";
 function ERDViewerContent() {
   const searchParams = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
+  const dialect =
+    (searchParams.get("dialect") as DatabaseDialect) || "postgresql";
+  const dbName = searchParams.get("db") || "demo_db";
 
   const { schema, setSchema, isLoading, setLoading } = useERDStore();
 
-  // Load schema on mount
+  // Load demo schema jika demo mode
   useEffect(() => {
-    const loadSchema = async () => {
-      if (isDemo && !schema) {
-        setLoading(true);
-
-        // Simulasi loading
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Load mock schema
-        setSchema(mockSchema);
+    if (isDemo && !schema) {
+      setLoading(true);
+      // Simulasi loading untuk demo
+      setTimeout(() => {
+        setSchema(getMockSchema(dialect, dbName));
         setLoading(false);
-      }
-    };
-
-    loadSchema();
-  }, [isDemo, schema, setSchema, setLoading]);
+      }, 1000);
+    }
+  }, [isDemo, dialect, dbName, schema, setSchema, setLoading]);
 
   // Loading state
   if (isLoading) {
     return <LoadingState />;
   }
 
-  // Empty state
+  // Empty state - tidak ada schema
   if (!schema) {
     return <EmptyState />;
   }
